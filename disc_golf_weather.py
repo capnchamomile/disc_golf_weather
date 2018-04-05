@@ -3,6 +3,7 @@
 import json
 import requests
 
+STATE = 'OR'
 OWM_KEY = '' # Sign up for a free API key at http://openweathermap.org/appid
 WUG_KEY = '' # Sign up for a free API key at https://www.wunderground.com/weather/api/
 GGL_KEY = '' # Sign up for a free API key at https://developers.google.com/maps/documentation/geocoding/start
