@@ -11,17 +11,17 @@ DSN_KEY = '' # Sign up for a free API key at https://darksky.net/dev/docs
 
 # Locations with city codes for openweathermap.org. Wunderground and DarkSky doesn't require city codes.
 
-LOCATIONS = {'Eugene' : '5725846', \
-            'Dexter': '5735869', \
-            'Noti': '5758566', \
-            'Cottage Grove': '5720755'}
+LOCATIONS = ['Eugene', \
+            'Dexter', \
+            'Noti', \
+            'Cottage Grove']
 
-EXTRA_LOCATIONS = {'Roseburg': '5749352', \
-                   'Corvallis': '5720727', \
-                   'Lebanon': '5736218', \
-                   'Estacada': '5725801', \
-                   'Portland': '5746545', \
-                   'Grants Pass': '5729080'}
+EXTRA_LOCATIONS = ['Roseburg', \
+                   'Corvallis', \
+                   'Lebanon', \
+                   'Estacada', \
+                   'Portland', \
+                   'Grants Pass']
 
 def main():
     print()
@@ -73,9 +73,19 @@ def pull_json(url):
     json_data = json.loads(response.text)
     return json_data
 
+def gmaps_geolocator(location):
+    url = "https://maps.googleapis.com/maps/api/geocode/json?address={place},+{state}&key={key}".format(place=location, state=STATE, key=GGL_KEY)
+
+    geometry_data = pull_json(url)
+
+    place_latitude = geometry_data['results'][0]['geometry']['location']['lat']
+    place_longitude = geometry_data['results'][0]['geometry']['location']['lng']
+    return place_latitude, place_longitude
+
 def get_openweather(location):
-    for place, city_code in location.items():
-        url = 'http://api.openweathermap.org/data/2.5/forecast?id={id}&appid={key}&cnt=3&units=imperial'.format(id=city_code, key=OWM_KEY)
+    for place in location:
+        lat, lng = gmaps_geolocator(place)
+        url = 'http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lng}&appid={key}&cnt=3&units=imperial'.format(lat=str(lat), lng=str(lng), key=OWM_KEY)
 
         w = pull_json(url)['list']
 
@@ -99,7 +109,7 @@ def get_openweather(location):
         print('*' * 40)
 
 def get_wunderground(location):
-    for place, city_code in location.items():
+    for place in location:
         url = "http://api.wunderground.com/api/{key}/forecast/q/{state}/{city}.json".format(key=WUG_KEY, state=STATE, city=place)
 
         w = pull_json(url)['forecast']['txt_forecast']['forecastday']
@@ -113,18 +123,9 @@ def get_wunderground(location):
         print(w[2]['fcttext'])
         print('*' * 100)
 
-def gmaps_geolocator(location):
-    url = "https://maps.googleapis.com/maps/api/geocode/json?address={place},+{state}&key={key}".format(place=location, state=STATE, key=GGL_KEY)
-
-    geometry_data = pull_json(url)
-
-    place_latitude = geometry_data['results'][0]['geometry']['location']['lat']
-    place_longitude = geometry_data['results'][0]['geometry']['location']['lng']
-    return place_latitude, place_longitude
-
 def get_darksky(location):
     print("Powered by Dark Sky: https://darksky.net/poweredby")
-    for place, city_code in location.items():
+    for place in location:
         lat, lng = gmaps_geolocator(place)
         url = "https://api.darksky.net/forecast/{key}/{lat},{lng}".format(key=DSN_KEY, lat=str(lat), lng=str(lng))
 
@@ -134,8 +135,6 @@ def get_darksky(location):
         print('Today\'s weather in {place}\n'.format(place=place))
         print(w['daily']['summary'])
         print('*' * 100)
-
-
 
 if __name__ == "__main__":
     main()
