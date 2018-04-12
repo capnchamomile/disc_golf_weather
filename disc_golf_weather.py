@@ -199,7 +199,8 @@ def get_darksky(city, state):
 
 def get_dgcr(city, state):
     '''Pulls local courses from DGCourseReview.com'''
-    url = DGCR_URL.format(key=DGCR_KEY, city=city, state=state, sig=DGCR_SIG)
+    lat, lng = gmaps_geolocator(city, state)
+    url = DGCR_URL.format(key=DGCR_KEY, lat=lat, lng=lng, sig=DGCR_SIG)
     dgcr_data = pull_json(url)
     print('Disc Golf courses near {city}, {state}:\nPowered by DGCourseReview.com\n\n'.format(city=city, state=state))
     print('*' * 40)
