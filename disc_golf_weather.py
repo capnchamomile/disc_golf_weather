@@ -7,17 +7,26 @@ OWM_KEY = '' # Sign up for a free API key at http://openweathermap.org/appid
 WUG_KEY = '' # Sign up for a free API key at https://www.wunderground.com/weather/api/
 GGL_KEY = '' # Sign up for a free API key at https://developers.google.com/maps/documentation/geocoding/start
 DSN_KEY = '' # Sign up for a free API key at https://darksky.net/dev/docs
+DGCR_KEY = '' # Look at API pricing for at https://www.dgcoursereview.com/api.php
+DGCR_SIG = '' # Once you have your key, create your sig as follows: https://www.dgcoursereview.com/api_docs.php
 
-LOCATIONS = ['Eugene', \
-            'Dexter', \
-            'Noti', \
-            'Cottage Grove']
+OWM_URL = 'http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lng}&appid={key}&cnt=3&units=imperial'
+WUG_URL = "http://api.wunderground.com/api/{key}/forecast/q/{state}/{city}.json"
+GGL_URL = "https://maps.googleapis.com/maps/api/geocode/json?address={place},+{state}&key={key}"
+DSN_URL = "https://api.darksky.net/forecast/{key}/{lat},{lng}"
+# I'm currently using a test API address for DGCR 
+DGCR_URL = 'https://www.dgcoursereview.com/api_test/?key={key}&mode=findloc&city={city}&state={state}&country=US&sig={sig}'
 
-EXTRA_LOCATIONS = ['Roseburg', \
-                   'Corvallis', \
-                   'Lebanon', \
-                   'Estacada', \
-                   'Portland', \
+LOCATIONS = ['Eugene',
+             'Dexter',
+             'Noti',
+             'Cottage Grove']
+
+EXTRA_LOCATIONS = ['Roseburg',
+                   'Corvallis',
+                   'Lebanon',
+                   'Estacada',
+                   'Portland',
                    'Grants Pass']
 
 print('*' * 40)
@@ -64,8 +73,6 @@ def lane_county():
         if lc_answer_two.lower() == 'y':
             for extra in EXTRA_LOCATIONS:
                 get_openweather(extra, oregon)
-        else:
-            return False
     elif lc_answer_one == '2':
         for place in LOCATIONS:
             get_wunderground(place, oregon)
@@ -73,8 +80,6 @@ def lane_county():
         if lc_answer_two.lower() == 'y':
             for extra in EXTRA_LOCATIONS:
                 get_wunderground(extra, oregon)
-        else:
-            return False
     elif lc_answer_one == '3':
         for place in LOCATIONS:
             get_darksky(place, oregon)
@@ -82,8 +87,6 @@ def lane_county():
         if lc_answer_two.lower() == 'y':
             for extra in EXTRA_LOCATIONS:
                 get_darksky(extra, oregon)
-        else:
-            return False
 
 
 def city_lookup(city, state):
@@ -95,22 +98,22 @@ def city_lookup(city, state):
     if cl_answer_one == '1':
         try:
             get_openweather(city, state)
-        except:
-            KeyError
+            get_dgcr(city, state)
+        except KeyError:
             print("Did you mispell one of those by chance? Let's start over.")
             main()
     elif cl_answer_one == '2':
         try:
             get_wunderground(city, state)
-        except:
-            KeyError
+            get_dgcr(city, state)
+        except KeyError:
             print("Did you mispell one of those by chance? Let's start over.")
             main()
     elif cl_answer_one == '3':
         try:
             get_darksky(city, state)
-        except:
-            KeyError
+            get_dgcr(city, state)
+        except KeyError:
             print("Did you mispell one of those by chance? Let's start over.")
             main()
     else:
@@ -128,7 +131,7 @@ def pull_json(url):
 
 def gmaps_geolocator(city, state):
     '''Provides Latitude/Longitude Coordinates for OpenWeatherMap and DarkSky'''
-    url = "https://maps.googleapis.com/maps/api/geocode/json?address={place},+{state}&key={key}".format(place=city, state=state, key=GGL_KEY)
+    url = GGL_URL.format(place=city, state=state, key=GGL_KEY)
 
     geometry_data = pull_json(url)
 
@@ -140,7 +143,7 @@ def gmaps_geolocator(city, state):
 def get_openweather(city, state):
     '''Pulls OpenWeatherMap data and prints it'''
     lat, lng = gmaps_geolocator(city, state)
-    url = 'http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lng}&appid={key}&cnt=3&units=imperial'.format(lat=str(lat), lng=str(lng), key=OWM_KEY)
+    url = OWM_URL.format(lat=str(lat), lng=str(lng), key=OWM_KEY)
 
     w_data = pull_json(url)['list']
 
@@ -166,33 +169,55 @@ def get_openweather(city, state):
 
 def get_wunderground(city, state):
     ''' Pulls Wunderground data and prints it '''
-    url = "http://api.wunderground.com/api/{key}/forecast/q/{state}/{city}.json".format(key=WUG_KEY, state=state, city=city)
+    url = WUG_URL.format(key=WUG_KEY, state=state, city=city)
 
     w_data = pull_json(url)['forecast']['txt_forecast']['forecastday']
 
-    print('*' * 100)
+    print('*' * 40)
     print('Today\'s weather in {place}, {state}:'.format(place=city.title(), state=state.title()))
     print(w_data[0]['fcttext'], '\n')
     print('Tomorrow in {place}, {state}:'.format(place=city.title(), state=state.title()))
     print(w_data[1]['fcttext'], '\n')
     print('Tomorrow in {place}, {state}:'.format(place=city.title(), state=state.title()))
     print(w_data[2]['fcttext'])
-    print('*' * 100)
+    print('*' * 40)
 
 
 def get_darksky(city, state):
     ''' Pulls DarkSky data and prints it '''
     print("Powered by Dark Sky: https://darksky.net/poweredby")
     lat, lng = gmaps_geolocator(city, state)
-    url = "https://api.darksky.net/forecast/{key}/{lat},{lng}".format(key=DSN_KEY, lat=str(lat), lng=str(lng))
+    url = DSN_URL.format(key=DSN_KEY, lat=str(lat), lng=str(lng))
 
     w_data = pull_json(url)
 
-    print('*' * 100)
+    print('*' * 40)
 
     print('Today\'s weather in {place}, {state}\n'.format(place=city.title(), state=state.title()))
     print(w_data['daily']['summary'])
-    print('*' * 100)
+    print('*' * 40)
+
+def get_dgcr(city, state):
+    '''Pulls local courses from DGCourseReview.com'''
+    url = DGCR_URL.format(key=DGCR_KEY, city=city, state=state, sig=DGCR_SIG)
+    dgcr_data = pull_json(url)
+    print('Disc Golf courses near {city}, {state}:\nPowered by DGCourseReview.com\n\n'.format(city=city, state=state))
+    print('*' * 40)
+    for course in dgcr_data:
+          print(course['name'])
+          print('    Located in ' + course['city'] + ', ' + course['state'])
+          print('    ' + course['holes'] + ' holes')
+          if course['private'] == '0':
+              print('    Public Course')
+          else:
+              print('    Private Course')
+          if course['paytoplay'] == '0':
+              print('    Free to play')
+          else:
+              print('    Pay to play')
+          print('    DGCourseReview.com Rating: ' + course['rating'] + ' out of 5\n')
+    print('*' * 40)
+
 
 
 if __name__ == "__main__":
