@@ -14,8 +14,7 @@ OWM_URL = 'http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lng}&a
 WUG_URL = "http://api.wunderground.com/api/{key}/forecast/q/{state}/{city}.json"
 GGL_URL = "https://maps.googleapis.com/maps/api/geocode/json?address={place},+{state}&key={key}"
 DSN_URL = "https://api.darksky.net/forecast/{key}/{lat},{lng}"
-# I'm currently using a test API address for DGCR 
-DGCR_URL = 'https://www.dgcoursereview.com/api_test/?key={key}&mode=findloc&city={city}&state={state}&country=US&sig={sig}'
+DGCR_URL = 'https://www.dgcoursereview.com/api/?key={key}&mode=near_rad&lat={lat}&lon={lng}&limit=5&rad=25&sig={sig}'
 
 LOCATIONS = ['Eugene',
              'Dexter',
@@ -197,16 +196,17 @@ def get_darksky(city, state):
     print(w_data['daily']['summary'])
     print('*' * 40)
 
+
 def get_dgcr(city, state):
     '''Pulls local courses from DGCourseReview.com'''
     lat, lng = gmaps_geolocator(city, state)
     url = DGCR_URL.format(key=DGCR_KEY, lat=lat, lng=lng, sig=DGCR_SIG)
     dgcr_data = pull_json(url)
-    print('Disc Golf courses near {city}, {state}:\nPowered by DGCourseReview.com\n\n'.format(city=city, state=state))
+    print('Disc golf courses within 25 miles of {city}, {state}:\nPowered by DGCourseReview: https://dgcoursereview.com'.format(city=city, state=state))
     print('*' * 40)
     for course in dgcr_data:
           print(course['name'])
-          print('    Located in ' + course['city'] + ', ' + course['state'])
+          print('    Located in ' + str(course['city']) + ', ' + str(course['state']))
           print('    ' + course['holes'] + ' holes')
           if course['private'] == '0':
               print('    Public Course')
@@ -218,7 +218,6 @@ def get_dgcr(city, state):
               print('    Pay to play')
           print('    DGCourseReview.com Rating: ' + course['rating'] + ' out of 5\n')
     print('*' * 40)
-
 
 
 if __name__ == "__main__":
